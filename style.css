@@ -11,6 +11,8 @@
     --header-bg-clr: #272c37;
     --header-txt-clr: #fff;
     --txt-clr: #272c37;
+    --grid-cell-clr: #fff;
+    --grid-cell-hover-clr: #ebfee7;
 }
 
 html{
@@ -47,6 +49,30 @@ main{
     padding: 20px 16px;
 }
 
+main > .game-info{
+    font-size: 1.5rem;
+}
+
+main > .game-board{
+    height: 395px;
+    width: 395px;
+    display: grid;
+    grid-template-columns: repeat(3, 125px);
+    grid-template-rows: repeat(3, 125px);
+    gap: 10px;
+    margin-top: 20px;
+}
+
+main > .game-board .grid-cell{
+    cursor: pointer;
+    background-color: var(--grid-cell-clr);
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+
+main > .game-board .grid-cell:hover{
+    background-color: var(--grid-cell-hover-clr);
+}
+
 footer{
     display: flex;
     justify-content: center;
@@ -58,4 +84,14 @@ footer{
 
 footer a{
     text-decoration: none;
+}
+
+@media(max-width: 430px){
+    main > .game-board{
+        height: 260px;
+        width: 260px;
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 80px);
+        gap: 10px;
+    }
 }
