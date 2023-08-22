@@ -17,8 +17,12 @@ const DisplayController = (() => {
             // display signatures on grid
             gridCell.textContent = gameBoardItems[index];
             // change color based on signature
-            if(gameBoardItems[index] === 'X') gridCell.style.color = '#2f78bc';
-            else if(gameBoardItems[index] === 'O') gridCell.style.color = '#f45';
+            if(gameBoardItems[index] === 'X') {
+                gridCell.style.color = '#2f78bc';
+            }
+            else if(gameBoardItems[index] === 'O') {
+                gridCell.style.color = '#f45';
+            };
         });
     };
 
@@ -27,6 +31,8 @@ const DisplayController = (() => {
 
 const GameController = (() => {
     const gridCells = document.querySelectorAll('.grid-cell');
+    const gameInfoTxt = document.getElementById('game-info-txt');
+
     let playerXTurn = true;
 
     const getSignature = () => {
@@ -40,6 +46,11 @@ const GameController = (() => {
         }
     };
 
+    const updateSignature = () => {
+        if(playerXTurn) gameInfoTxt.textContent = `Player ${playerX.signature}'s turn`;
+        else gameInfoTxt.textContent = `Player ${playerO.signature}'s turn`;
+    }
+
     const updateGameBoard = (gridCell) => {
         const index = parseInt(gridCell.getAttribute('data-index'));
         GameBoard.getGameBoard()[index] = getSignature();
@@ -52,6 +63,7 @@ const GameController = (() => {
             gridCell.addEventListener('click', () => {
                 if(gridCell.textContent === ''){
                     updateGameBoard(gridCell);
+                    updateSignature();
                 }
             })
         })
