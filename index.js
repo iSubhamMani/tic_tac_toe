@@ -14,7 +14,11 @@ const DisplayController = (() => {
 
     const updateGameBoard = (gridCells) => {
         gridCells.forEach( (gridCell, index) => {
+            // display signatures on grid
             gridCell.textContent = gameBoardItems[index];
+            // change color based on 
+            if(gameBoardItems[index] === 'X') gridCell.style.color = '#2f78bc';
+            else if(gameBoardItems[index] === 'O') gridCell.style.color = '#f45';
         });
     };
 
