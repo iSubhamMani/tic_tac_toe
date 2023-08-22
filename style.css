@@ -108,4 +108,8 @@ footer a{
         grid-template-rows: repeat(3, 80px);
         gap: 10px;
     }
+
+    main > #game-board .grid-cell{
+        font-size: 160%;
+    }
 }
