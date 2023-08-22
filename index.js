@@ -16,7 +16,7 @@ const DisplayController = (() => {
         gridCells.forEach( (gridCell, index) => {
             // display signatures on grid
             gridCell.textContent = gameBoardItems[index];
-            // change color based on 
+            // change color based on signature
             if(gameBoardItems[index] === 'X') gridCell.style.color = '#2f78bc';
             else if(gameBoardItems[index] === 'O') gridCell.style.color = '#f45';
         });
@@ -39,7 +39,7 @@ const GameController = (() => {
             return playerO.signature;
         }
     };
- 
+
     const updateGameBoard = (gridCell) => {
         const index = parseInt(gridCell.getAttribute('data-index'));
         GameBoard.getGameBoard()[index] = getSignature();
