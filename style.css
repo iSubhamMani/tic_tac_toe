@@ -9,10 +9,13 @@
 :root{
     --bg-clr: #eaebeb;
     --header-bg-clr: #2f78bc;
+    --replay-bg-clr: #2f78bc;
     --header-txt-clr: #fff;
     --txt-clr: #272c37;
     --grid-cell-clr: #fff;
     --grid-cell-hover-clr: #f5f5f5;
+    --endgame-txt-clr: #ededed;
+    --modal-bg-clr: #f3f3f3;
 }
 
 html{
@@ -91,6 +94,41 @@ main > #game-board .grid-cell:hover{
 main > .game-info > #game-info-txt{
     font-weight: 500;
     color: var(--txt-clr);
+}
+
+main > .modal{
+    width: max(20%, 200px);
+    padding: 30px 20px;
+    border: none;
+    border-radius: 16px;
+    margin: auto;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+
+    background-color: var(--modal-bg-clr);
+}
+
+main > .modal > .modal-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+main > .modal .endgame-msg{
+    font-size: 1.5rem;
+    color: var(--txt-clr);
+    text-align: center;
+}
+
+main > .modal .replay-game{
+    font-size: 1.2rem;
+    color: var(--endgame-txt-clr);
+    border: none;
+    padding: 12px 24px;
+    background-color: var(--replay-bg-clr);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 footer{
