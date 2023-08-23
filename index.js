@@ -11,6 +11,8 @@ const GameBoard = (() => {
 const DisplayController = (() => {
     // display signatures on grid
     const gameBoard = GameBoard.getGameBoard();
+    const modal = document.querySelector('.modal');
+    const endGameTxt = document.querySelector('.endgame-msg');
 
     const updateGameBoard = (gridCells) => {
         gridCells.forEach( (gridCell, index) => {
@@ -18,7 +20,7 @@ const DisplayController = (() => {
             gridCell.textContent = gameBoard[index];
             // change color based on signature
             if(gameBoard[index] === 'X') {
-                gridCell.style.color = '#2f78bc';
+                gridCell.style.color = '#5dd028';
             }
             else if(gameBoard[index] === 'O') {
                 gridCell.style.color = '#f45';
@@ -26,22 +28,47 @@ const DisplayController = (() => {
         });
     };
 
-    return {updateGameBoard};
+    const showEndScreen = (endGameMsg) => {
+        endGameTxt.textContent = endGameMsg;
+        modal.showModal();
+    }
+
+    const closeEndScreen = () => {
+        modal.close();
+    } 
+
+    return {updateGameBoard, showEndScreen, closeEndScreen};
 })();
 
 const GameController = (() => {
     const gridCells = document.querySelectorAll('.grid-cell');
     const gameInfoTxt = document.getElementById('game-info-txt');
 
+    const replayBtn = document.querySelector('.replay-game');
+
     let playerXTurn = true;
     let turnsCounter = 0;
     let endMatchMsg = '';
+    const minTurnsToWin = 5;
+    const maxTurns = 9;
     const gameBoard = GameBoard.getGameBoard();
+
+    replayBtn.addEventListener('click', () => {
+        DisplayController.closeEndScreen();
+        setDefaults();
+    });
 
     const setDefaults = () => {
         playerXTurn = true;
         turnsCounter = 0;
         endMatchMsg = '';
+
+        for(let i = 0; i < gameBoard.length; i++){
+            gameBoard[i] = '';
+        }
+
+        updateGameInfo();
+        DisplayController.updateGameBoard(gridCells);
     }
 
     const getSignature = () => {
@@ -73,9 +100,10 @@ const GameController = (() => {
                 if(gridCell.textContent === ''){
                     turnsCounter++;
                     updateGameBoard(gridCell);
+
                     if(checkForWin()){
                         // Display End Screen
-                        
+                        DisplayController.showEndScreen(endMatchMsg);
                     }
                     else{
                         updateGameInfo();
@@ -86,11 +114,11 @@ const GameController = (() => {
     };
 
     const checkForWin = () => {
-        if(turnsCounter >= 5 && checkGameBoard()){
+        if(turnsCounter >= minTurnsToWin && checkGameBoard()){
             endMatchMsg = `Player ${checkGameBoard()} has won!`;
             return true;
         }
-        else if(turnsCounter === 9 && !checkGameBoard()){
+        else if(turnsCounter === maxTurns && !checkGameBoard()){
             endMatchMsg = 'Match Tie..';
             return true;
         }
