@@ -46,7 +46,7 @@ const GameController = (() => {
         }
     };
 
-    const updateSignature = () => {
+    const updateGameInfo = () => {
         if(playerXTurn) gameInfoTxt.textContent = `Player ${playerX.signature}'s turn`;
         else gameInfoTxt.textContent = `Player ${playerO.signature}'s turn`;
     }
@@ -63,7 +63,7 @@ const GameController = (() => {
             gridCell.addEventListener('click', () => {
                 if(gridCell.textContent === ''){
                     updateGameBoard(gridCell);
-                    updateSignature();
+                    updateGameInfo();
                 }
             })
         })
