@@ -1,159 +1,222 @@
-const GameBoard = (() => {
-    let _gameBoard = ['', '', '', '', '', '', '', '', ''];
+// Class representing the game board of Tic-Tac-Toe
+class GameBoard {
+  // Constructor initializes the game board as an array with 9 empty strings (representing empty cells)
+  constructor() {
+    this._gameBoard = ["", "", "", "", "", "", "", "", ""];
+  }
 
-    const getGameBoard = () => {
-        return _gameBoard;
-    };
+  // Method to return the current state of the game board
+  getGameBoard() {
+    return this._gameBoard;
+  }
 
-    return {getGameBoard};
-})();
-
-const DisplayController = (() => {
-    // display signatures on grid
-    const gameBoard = GameBoard.getGameBoard();
-    const modal = document.querySelector('.modal');
-    const endGameTxt = document.querySelector('.endgame-msg');
-
-    const updateGameBoard = (gridCells) => {
-        gridCells.forEach( (gridCell, index) => {
-            // display signatures on grid
-            gridCell.textContent = gameBoard[index];
-            // change color based on signature
-            if(gameBoard[index] === 'X') {
-                gridCell.style.color = '#5dd028';
-            }
-            else if(gameBoard[index] === 'O') {
-                gridCell.style.color = '#f45';
-            };
-        });
-    };
-
-    const showEndScreen = (endGameMsg) => {
-        endGameTxt.textContent = endGameMsg;
-        modal.showModal();
-    }
-
-    const closeEndScreen = () => {
-        modal.close();
-    } 
-
-    return {updateGameBoard, showEndScreen, closeEndScreen};
-})();
-
-const GameController = (() => {
-    const gridCells = document.querySelectorAll('.grid-cell');
-    const gameInfoTxt = document.getElementById('game-info-txt');
-
-    const replayBtn = document.querySelector('.replay-game');
-
-    let playerXTurn = true;
-    let turnsCounter = 0;
-    let endMatchMsg = '';
-    const minTurnsToWin = 5;
-    const maxTurns = 9;
-    const gameBoard = GameBoard.getGameBoard();
-
-    replayBtn.addEventListener('click', () => {
-        DisplayController.closeEndScreen();
-        setDefaults();
-    });
-
-    const setDefaults = () => {
-        playerXTurn = true;
-        turnsCounter = 0;
-        endMatchMsg = '';
-
-        for(let i = 0; i < gameBoard.length; i++){
-            gameBoard[i] = '';
-        }
-
-        updateGameInfo();
-        DisplayController.updateGameBoard(gridCells);
-    }
-
-    const getSignature = () => {
-        if(playerXTurn){
-            playerXTurn = false;
-            return playerX.signature;
-        }
-        else{
-            playerXTurn = true;
-            return playerO.signature;
-        }
-    };
-
-    const updateGameInfo = () => {
-        if(playerXTurn) gameInfoTxt.textContent = `Player ${playerX.signature}'s turn`;
-        else gameInfoTxt.textContent = `Player ${playerO.signature}'s turn`;
-    }
-
-    const updateGameBoard = (gridCell) => {
-        const index = parseInt(gridCell.getAttribute('data-index'));
-        gameBoard[index] = getSignature();
-
-        DisplayController.updateGameBoard(gridCells);
-    };
-
-    const addGridListener = () => {
-        gridCells.forEach(gridCell => {
-            gridCell.addEventListener('click', () => {
-                if(gridCell.textContent === ''){
-                    turnsCounter++;
-                    updateGameBoard(gridCell);
-
-                    if(checkForWin()){
-                        // Display End Screen
-                        DisplayController.showEndScreen(endMatchMsg);
-                    }
-                    else{
-                        updateGameInfo();
-                    }
-                }
-            });
-        })
-    };
-
-    const checkForWin = () => {
-        if(turnsCounter >= minTurnsToWin && checkGameBoard()){
-            endMatchMsg = `Player ${checkGameBoard()} has won!`;
-            return true;
-        }
-        else if(turnsCounter === maxTurns && !checkGameBoard()){
-            endMatchMsg = 'Match Tie..';
-            return true;
-        }
-    }
-
-    const checkGameBoard = () => {
-        // Row check
-        if(gameBoard[0] === gameBoard[1] && gameBoard[1] === gameBoard[2] && gameBoard[0] !== '') return gameBoard[0];
-            
-        else if(gameBoard[3] === gameBoard[4] && gameBoard[4] === gameBoard[5] && gameBoard[3] !== '') return gameBoard[3];
-           
-        else if(gameBoard[6] === gameBoard[7] && gameBoard[7] === gameBoard[8] && gameBoard[6] !== '') return gameBoard[6];
-
-        // Column Check
-        else if(gameBoard[0] === gameBoard[3] && gameBoard[3] === gameBoard[6] && gameBoard[0] !== '') return gameBoard[0];
-           
-        else if(gameBoard[1] === gameBoard[4] && gameBoard[4] === gameBoard[7] && gameBoard[1] !== '') return gameBoard[1];
-
-        else if(gameBoard[2] === gameBoard[5] && gameBoard[5] === gameBoard[8] && gameBoard[2] !== '') return gameBoard[2];
-
-        // Diagonal Check
-        else if(gameBoard[0] === gameBoard[4] && gameBoard[4] === gameBoard[8] && gameBoard[0] !== '') return gameBoard[0];
-
-        else if(gameBoard[2] === gameBoard[4] && gameBoard[4] === gameBoard[6] && gameBoard[2] !== '') return gameBoard[2];
-
-        // Match Tie
-        else return false;
-    };
-
-    addGridListener();
-})();
-
-const Player = (signature) => {
-    return {signature};
+  // Method to reset the game board (fills the board with empty strings)
+  resetBoard() {
+    this._gameBoard.fill("");
+  }
 }
 
-const playerX = Player('X');
-const playerO = Player('O');
+// Class that handles displaying the game board and other UI elements
+class DisplayController {
+  constructor(gameBoard) {
+    // Reference to the game board array (needed to display the current state)
+    this.gameBoard = gameBoard;
+
+    // Get the modal element that will show the end screen when the game is over
+    this.modal = document.querySelector(".modal");
+
+    // Get the element where the end game message (win/tie) will be displayed
+    this.endGameTxt = document.querySelector(".endgame-msg");
+  }
+
+  // Method to update the UI of the game board (called after every player move)
+  updateGameBoard(gridCells) {
+    // Loop through all grid cells and update their content
+    gridCells.forEach((gridCell, index) => {
+      gridCell.textContent = this.gameBoard[index]; // Update the grid cell with 'X', 'O', or empty
+      // Change the color of 'X' and 'O' for better visual distinction
+      if (this.gameBoard[index] === "X") {
+        gridCell.style.color = "#5dd028"; // Green color for 'X'
+      } else if (this.gameBoard[index] === "O") {
+        gridCell.style.color = "#f45"; // Red color for 'O'
+      }
+    });
+  }
+
+  // Method to show the modal at the end of the game with a win/tie message
+  showEndScreen(endGameMsg) {
+    this.endGameTxt.textContent = endGameMsg; // Set the message text
+    this.modal.showModal(); // Show the modal
+  }
+
+  // Method to close the modal when the game is reset
+  closeEndScreen() {
+    this.modal.close(); // Close the modal
+  }
+}
+
+// Class to represent a player, either X or O
+class Player {
+  constructor(signature) {
+    // 'signature' is either 'X' or 'O'
+    this.signature = signature;
+  }
+}
+
+// Class that controls the game logic, handles turns, and checks for a win/tie
+class GameController {
+  constructor(gameBoard, displayController, playerX, playerO) {
+    // Get all grid cells in the game (these are the clickable boxes in the UI)
+    this.gridCells = document.querySelectorAll(".grid-cell");
+
+    // Get the element where information about the current player's turn will be displayed
+    this.gameInfoTxt = document.getElementById("game-info-txt");
+
+    // Get the replay button element (for restarting the game)
+    this.replayBtn = document.querySelector(".replay-game");
+
+    // Initial game state values
+    this.playerXTurn = true; // Player X always starts first
+    this.turnsCounter = 0; // Tracks the number of turns (maximum is 9)
+    this.endMatchMsg = ""; // Message to show at the end of the game (either win or tie)
+    this.minTurnsToWin = 5; // Minimum number of turns needed to check for a win
+    this.maxTurns = 9; // Maximum number of turns (if reached, the game ends in a tie)
+    this.gameBoard = gameBoard.getGameBoard(); // Reference to the game board array
+    this.displayController = displayController; // Reference to the DisplayController for updating the UI
+    this.playerX = playerX; // Reference to Player X
+    this.playerO = playerO; // Reference to Player O
+
+    // Set up the event listener for the replay button (to reset the game)
+    this.replayBtn.addEventListener("click", () => {
+      this.displayController.closeEndScreen(); // Close the end game modal
+      this.setDefaults(); // Reset the game to its default state
+    });
+
+    // Set up the event listeners for the grid cells (to allow players to click on them)
+    this.addGridListener();
+
+    // Update the game information to show the current player's turn
+    this.updateGameInfo();
+  }
+
+  // Method to reset the game to its initial state
+  setDefaults() {
+    this.playerXTurn = true; // Player X starts first
+    this.turnsCounter = 0; // Reset the turn counter
+    this.endMatchMsg = ""; // Clear the end game message
+
+    // Clear the game board
+    this.gameBoard.fill("");
+
+    // Update the game information and UI
+    this.updateGameInfo();
+    this.displayController.updateGameBoard(this.gridCells);
+  }
+
+  // Method to get the current player's signature ('X' or 'O')
+  getSignature() {
+    if (this.playerXTurn) {
+      this.playerXTurn = false; // Toggle to player O's turn
+      return this.playerX.signature; // Return 'X'
+    } else {
+      this.playerXTurn = true; // Toggle to player X's turn
+      return this.playerO.signature; // Return 'O'
+    }
+  }
+
+  // Method to update the game information (which player's turn it is)
+  updateGameInfo() {
+    this.gameInfoTxt.textContent = `Player ${
+      this.playerXTurn ? this.playerX.signature : this.playerO.signature
+    }'s turn`;
+  }
+
+  // Method to update the game board when a player clicks on a cell
+  updateGameBoard(gridCell) {
+    const index = parseInt(gridCell.getAttribute("data-index")); // Get the index of the clicked cell
+    this.gameBoard[index] = this.getSignature(); // Place 'X' or 'O' in the clicked cell
+
+    // Update the UI to reflect the current state of the game board
+    this.displayController.updateGameBoard(this.gridCells);
+  }
+
+  // Method to add click event listeners to all grid cells
+  addGridListener() {
+    this.gridCells.forEach((gridCell) => {
+      gridCell.addEventListener("click", () => {
+        // If the clicked cell is empty, update the game state
+        if (gridCell.textContent === "") {
+          this.turnsCounter++; // Increment the turn counter
+          this.updateGameBoard(gridCell); // Update the game board
+
+          // Check if a player has won or if the game is a tie
+          if (this.checkForWin()) {
+            this.displayController.showEndScreen(this.endMatchMsg); // Show end screen with result
+          } else {
+            this.updateGameInfo(); // Update the turn info if the game is not over
+          }
+        }
+      });
+    });
+  }
+
+  // Method to check if the game has been won or if it's a tie
+  checkForWin() {
+    // Check if a player has won (after at least 5 turns)
+    if (this.turnsCounter >= this.minTurnsToWin && this.checkGameBoard()) {
+      this.endMatchMsg = `Player ${this.checkGameBoard()} has won!`; // Set the win message
+      return true; // End the game
+    }
+    // If all 9 turns are completed and there's no winner, it's a tie
+    else if (this.turnsCounter === this.maxTurns && !this.checkGameBoard()) {
+      this.endMatchMsg = "Match Tie.."; // Set the tie message
+      return true; // End the game
+    }
+    return false; // The game continues
+  }
+
+  // Method to check the game board for a winning combination (rows, columns, diagonals)
+  checkGameBoard() {
+    const board = this.gameBoard;
+
+    // Check rows for a win
+    if (board[0] === board[1] && board[1] === board[2] && board[0] !== "")
+      return board[0];
+    if (board[3] === board[4] && board[4] === board[5] && board[3] !== "")
+      return board[3];
+    if (board[6] === board[7] && board[7] === board[8] && board[6] !== "")
+      return board[6];
+
+    // Check columns for a win
+    if (board[0] === board[3] && board[3] === board[6] && board[0] !== "")
+      return board[0];
+    if (board[1] === board[4] && board[4] === board[7] && board[1] !== "")
+      return board[1];
+    if (board[2] === board[5] && board[5] === board[8] && board[2] !== "")
+      return board[2];
+
+    // Check diagonals for a win
+    if (board[0] === board[4] && board[4] === board[8] && board[0] !== "")
+      return board[0];
+    if (board[2] === board[4] && board[4] === board[6] && board[2] !== "")
+      return board[2];
+
+    return false; // No winner yet
+  }
+}
+
+// Initialize Players (Player X and Player O)
+const playerX = new Player("X");
+const playerO = new Player("O");
+
+// Initialize Game Board and Controllers
+const gameBoardInstance = new GameBoard();
+const displayControllerInstance = new DisplayController(
+  gameBoardInstance.getGameBoard()
+);
+const gameControllerInstance = new GameController(
+  gameBoardInstance,
+  displayControllerInstance,
+  playerX,
+  playerO
+);
