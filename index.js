@@ -1,222 +1,257 @@
 // Class representing the game board of Tic-Tac-Toe
 class GameBoard {
-  // Constructor initializes the game board as an array with 9 empty strings (representing empty cells)
   constructor() {
+    // The game board is initialized as an array with 9 empty strings (representing empty cells)
     this._gameBoard = ["", "", "", "", "", "", "", "", ""];
   }
 
-  // Method to return the current state of the game board
+  // Getter method to return the current state of the game board
   getGameBoard() {
     return this._gameBoard;
   }
 
-  // Method to reset the game board (fills the board with empty strings)
+  // Resets the game board to its initial empty state
   resetBoard() {
-    this._gameBoard.fill("");
+    this._gameBoard = ["", "", "", "", "", "", "", "", ""];
+  }
+
+  // Method to update a specific cell on the board
+  updateCell(index, value) {
+    // Only update the cell if it's empty and within valid range
+    if (index >= 0 && index < 9 && this._gameBoard[index] === "") {
+      this._gameBoard[index] = value;
+      return true;
+    }
+    return false; // Return false if the cell can't be updated
   }
 }
 
-// Class that handles displaying the game board and other UI elements
+// Class responsible for updating the display (UI)
 class DisplayController {
   constructor(gameBoard) {
-    // Reference to the game board array (needed to display the current state)
     this.gameBoard = gameBoard;
-
-    // Get the modal element that will show the end screen when the game is over
-    this.modal = document.querySelector(".modal");
-
-    // Get the element where the end game message (win/tie) will be displayed
-    this.endGameTxt = document.querySelector(".endgame-msg");
+    this.modal = document.querySelector(".modal"); // Modal for end game message
+    this.endGameTxt = document.querySelector(".endgame-msg"); // Endgame message text
   }
 
-  // Method to update the UI of the game board (called after every player move)
-  updateGameBoard(gridCells) {
-    // Loop through all grid cells and update their content
+  // Updates the game board display with the current game state
+  updateGameBoard(gridCells, gameBoard) {
     gridCells.forEach((gridCell, index) => {
-      gridCell.textContent = this.gameBoard[index]; // Update the grid cell with 'X', 'O', or empty
-      // Change the color of 'X' and 'O' for better visual distinction
-      if (this.gameBoard[index] === "X") {
-        gridCell.style.color = "#5dd028"; // Green color for 'X'
-      } else if (this.gameBoard[index] === "O") {
-        gridCell.style.color = "#f45"; // Red color for 'O'
+      gridCell.textContent = gameBoard[index];
+      if (gameBoard[index] === "X") {
+        gridCell.style.color = "#5dd028"; // Green for player X
+      } else if (gameBoard[index] === "O") {
+        gridCell.style.color = "#f45"; // Red for player O
+      } else {
+        gridCell.textContent = ""; // Clear the cell if it's empty
       }
     });
   }
 
-  // Method to show the modal at the end of the game with a win/tie message
+  // Displays the end game modal with a message
   showEndScreen(endGameMsg) {
-    this.endGameTxt.textContent = endGameMsg; // Set the message text
-    this.modal.showModal(); // Show the modal
+    this.endGameTxt.textContent = endGameMsg;
+    this.modal.showModal();
   }
 
-  // Method to close the modal when the game is reset
+  // Closes the end game modal
   closeEndScreen() {
-    this.modal.close(); // Close the modal
+    this.modal.close();
   }
 }
 
-// Class to represent a player, either X or O
+// Class representing a player in the game
 class Player {
   constructor(signature) {
-    // 'signature' is either 'X' or 'O'
-    this.signature = signature;
+    this.signature = signature; // X or O to represent the player's mark
   }
 }
 
-// Class that controls the game logic, handles turns, and checks for a win/tie
+// Bot class extending the Player class, representing the computer opponent
+class Bot extends Player {
+  constructor(signature) {
+    super(signature); // Call the parent class (Player) constructor
+  }
+
+  // AI method to choose a random empty cell on the board
+  makeMove(gameBoard) {
+    const emptyCells = gameBoard.reduce((acc, cell, index) => {
+      if (cell === "") acc.push(index); // Collect empty cell indices
+      return acc;
+    }, []);
+    return emptyCells[Math.floor(Math.random() * emptyCells.length)]; // Choose a random empty cell
+  }
+}
+
+// Main class controlling the game logic
 class GameController {
-  constructor(gameBoard, displayController, playerX, playerO) {
-    // Get all grid cells in the game (these are the clickable boxes in the UI)
-    this.gridCells = document.querySelectorAll(".grid-cell");
+  constructor(gameBoard, displayController, playerX, playerO, bot) {
+    this.gridCells = document.querySelectorAll(".grid-cell"); // All the cells on the game board
+    this.gameInfoTxt = document.getElementById("game-info-txt"); // Text for current player turn
+    this.replayBtn = document.querySelector(".replay-game"); // Replay button
+    this.modeSelectionDiv = document.getElementById("mode-selection"); // Mode selection buttons
+    this.pvpBtn = document.getElementById("pvp-btn"); // PvP mode button
+    this.pvbBtn = document.getElementById("pvb-btn"); // PvB mode button
 
-    // Get the element where information about the current player's turn will be displayed
-    this.gameInfoTxt = document.getElementById("game-info-txt");
+    this.gameBoard = gameBoard; // Instance of the GameBoard
+    this.displayController = displayController; // Instance of the DisplayController
+    this.playerX = playerX; // Player X (human)
+    this.playerO = playerO; // Player O (human or bot)
+    this.bot = bot; // Bot player for PvB mode
 
-    // Get the replay button element (for restarting the game)
-    this.replayBtn = document.querySelector(".replay-game");
+    this.isPvPMode = true; // Game mode flag (true = PvP, false = PvB)
+    this.isGameActive = false; // Flag to track if the game is currently active
+    this.currentPlayer = this.playerX; // The current player, starts with Player X
 
-    // Initial game state values
-    this.playerXTurn = true; // Player X always starts first
-    this.turnsCounter = 0; // Tracks the number of turns (maximum is 9)
-    this.endMatchMsg = ""; // Message to show at the end of the game (either win or tie)
-    this.minTurnsToWin = 5; // Minimum number of turns needed to check for a win
-    this.maxTurns = 9; // Maximum number of turns (if reached, the game ends in a tie)
-    this.gameBoard = gameBoard.getGameBoard(); // Reference to the game board array
-    this.displayController = displayController; // Reference to the DisplayController for updating the UI
-    this.playerX = playerX; // Reference to Player X
-    this.playerO = playerO; // Reference to Player O
+    this.initializeEventListeners(); // Set up event listeners
+    this.showModeSelection(); // Display mode selection screen at the start
+  }
 
-    // Set up the event listener for the replay button (to reset the game)
-    this.replayBtn.addEventListener("click", () => {
-      this.displayController.closeEndScreen(); // Close the end game modal
-      this.setDefaults(); // Reset the game to its default state
+  // Initialize all the event listeners for buttons and game cells
+  initializeEventListeners() {
+    this.replayBtn.addEventListener("click", () => this.handleReplay()); // Replay button event
+    this.pvpBtn.addEventListener("click", () => this.startGame(true)); // Start PvP mode
+    this.pvbBtn.addEventListener("click", () => this.startGame(false)); // Start PvB mode
+
+    // Add event listeners to all grid cells for making moves
+    this.gridCells.forEach((cell, index) => {
+      cell.addEventListener("click", () => this.handleCellClick(index));
     });
-
-    // Set up the event listeners for the grid cells (to allow players to click on them)
-    this.addGridListener();
-
-    // Update the game information to show the current player's turn
-    this.updateGameInfo();
   }
 
-  // Method to reset the game to its initial state
-  setDefaults() {
-    this.playerXTurn = true; // Player X starts first
-    this.turnsCounter = 0; // Reset the turn counter
-    this.endMatchMsg = ""; // Clear the end game message
-
-    // Clear the game board
-    this.gameBoard.fill("");
-
-    // Update the game information and UI
-    this.updateGameInfo();
-    this.displayController.updateGameBoard(this.gridCells);
+  // Handles the replay button click: resets the game and shows mode selection
+  handleReplay() {
+    this.displayController.closeEndScreen(); // Close the end game screen
+    this.showModeSelection(); // Show the mode selection screen
   }
 
-  // Method to get the current player's signature ('X' or 'O')
-  getSignature() {
-    if (this.playerXTurn) {
-      this.playerXTurn = false; // Toggle to player O's turn
-      return this.playerX.signature; // Return 'X'
-    } else {
-      this.playerXTurn = true; // Toggle to player X's turn
-      return this.playerO.signature; // Return 'O'
+  // Shows the mode selection screen and hides the game board
+  showModeSelection() {
+    this.modeSelectionDiv.style.display = "block"; // Show mode selection
+    document.querySelector(".game-board").style.display = "none"; // Hide game board
+    this.gameInfoTxt.style.display = "none"; // Hide game info text
+    this.isGameActive = false; // Set game to inactive
+  }
+
+  // Starts a new game after a mode is selected
+  startGame(isPvP) {
+    this.resetGame(); // Reset the game board
+    this.isPvPMode = isPvP; // Set the mode (PvP or PvB)
+    this.isGameActive = true; // Activate the game
+    this.modeSelectionDiv.style.display = "none"; // Hide mode selection
+    document.querySelector(".game-board").style.display = "grid"; // Show the game board
+    this.gameInfoTxt.style.display = "block"; // Show game info text
+  }
+
+  // Resets the game board and updates the display
+  resetGame() {
+    this.gameBoard.resetBoard(); // Reset the game board state
+    this.displayController.updateGameBoard(
+      this.gridCells,
+      this.gameBoard.getGameBoard()
+    ); // Update the board display
+    this.currentPlayer = this.playerX; // Set Player X as the starting player
+    this.isGameActive = true; // Set game as active
+    this.updateGameInfo(); // Update the UI with the current player's turn
+  }
+
+  // Handles a cell click to make a move
+  handleCellClick(index) {
+    // Ignore clicks if the game isn't active or the cell is already filled
+    if (!this.isGameActive || this.gameBoard.getGameBoard()[index] !== "") {
+      return;
+    }
+
+    // Make the move for the current player
+    this.makeMove(index);
+
+    // If playing against the bot and it's now the bot's turn, make the bot's move
+    if (!this.isPvPMode && this.currentPlayer === this.playerO) {
+      this.makeBotMove();
     }
   }
 
-  // Method to update the game information (which player's turn it is)
+  // Makes a move on the selected cell and checks for win/tie
+  makeMove(index) {
+    // Update the board and display if the move is valid
+    if (this.gameBoard.updateCell(index, this.currentPlayer.signature)) {
+      this.displayController.updateGameBoard(
+        this.gridCells,
+        this.gameBoard.getGameBoard()
+      );
+
+      // Check for win or tie conditions
+      if (this.checkForWin()) {
+        this.endGame(`Player ${this.currentPlayer.signature} wins!`);
+      } else if (this.checkForTie()) {
+        this.endGame("It's a tie!");
+      } else {
+        this.switchPlayer(); // Switch to the other player
+        this.updateGameInfo(); // Update the UI with the new player's turn
+      }
+    }
+  }
+
+  // Bot makes its move
+  makeBotMove() {
+    setTimeout(() => {
+      if (this.isGameActive) {
+        const botMoveIndex = this.bot.makeMove(this.gameBoard.getGameBoard());
+        this.makeMove(botMoveIndex); // Bot makes a random move
+      }
+    }, 500); // Add a slight delay to make the bot move feel more natural
+  }
+
+  // Switches to the other player
+  switchPlayer() {
+    this.currentPlayer =
+      this.currentPlayer === this.playerX ? this.playerO : this.playerX;
+  }
+
+  // Updates the game info text to show the current player's turn
   updateGameInfo() {
-    this.gameInfoTxt.textContent = `Player ${
-      this.playerXTurn ? this.playerX.signature : this.playerO.signature
-    }'s turn`;
+    this.gameInfoTxt.textContent = `Player ${this.currentPlayer.signature}'s turn`;
   }
 
-  // Method to update the game board when a player clicks on a cell
-  updateGameBoard(gridCell) {
-    const index = parseInt(gridCell.getAttribute("data-index")); // Get the index of the clicked cell
-    this.gameBoard[index] = this.getSignature(); // Place 'X' or 'O' in the clicked cell
+  // Checks if a player has won the game by matching any win pattern
+  checkForWin() {
+    const board = this.gameBoard.getGameBoard();
+    const winPatterns = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8], // Rows
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8], // Columns
+      [0, 4, 8],
+      [2, 4, 6], // Diagonals
+    ];
 
-    // Update the UI to reflect the current state of the game board
-    this.displayController.updateGameBoard(this.gridCells);
-  }
-
-  // Method to add click event listeners to all grid cells
-  addGridListener() {
-    this.gridCells.forEach((gridCell) => {
-      gridCell.addEventListener("click", () => {
-        // If the clicked cell is empty, update the game state
-        if (gridCell.textContent === "") {
-          this.turnsCounter++; // Increment the turn counter
-          this.updateGameBoard(gridCell); // Update the game board
-
-          // Check if a player has won or if the game is a tie
-          if (this.checkForWin()) {
-            this.displayController.showEndScreen(this.endMatchMsg); // Show end screen with result
-          } else {
-            this.updateGameInfo(); // Update the turn info if the game is not over
-          }
-        }
-      });
+    // Check each win pattern
+    return winPatterns.some((pattern) => {
+      const [a, b, c] = pattern;
+      return board[a] && board[a] === board[b] && board[a] === board[c];
     });
   }
 
-  // Method to check if the game has been won or if it's a tie
-  checkForWin() {
-    // Check if a player has won (after at least 5 turns)
-    if (this.turnsCounter >= this.minTurnsToWin && this.checkGameBoard()) {
-      this.endMatchMsg = `Player ${this.checkGameBoard()} has won!`; // Set the win message
-      return true; // End the game
-    }
-    // If all 9 turns are completed and there's no winner, it's a tie
-    else if (this.turnsCounter === this.maxTurns && !this.checkGameBoard()) {
-      this.endMatchMsg = "Match Tie.."; // Set the tie message
-      return true; // End the game
-    }
-    return false; // The game continues
+  // Checks if the game is a tie (all cells are filled with no winner)
+  checkForTie() {
+    return this.gameBoard.getGameBoard().every((cell) => cell !== "");
   }
 
-  // Method to check the game board for a winning combination (rows, columns, diagonals)
-  checkGameBoard() {
-    const board = this.gameBoard;
-
-    // Check rows for a win
-    if (board[0] === board[1] && board[1] === board[2] && board[0] !== "")
-      return board[0];
-    if (board[3] === board[4] && board[4] === board[5] && board[3] !== "")
-      return board[3];
-    if (board[6] === board[7] && board[7] === board[8] && board[6] !== "")
-      return board[6];
-
-    // Check columns for a win
-    if (board[0] === board[3] && board[3] === board[6] && board[0] !== "")
-      return board[0];
-    if (board[1] === board[4] && board[4] === board[7] && board[1] !== "")
-      return board[1];
-    if (board[2] === board[5] && board[5] === board[8] && board[2] !== "")
-      return board[2];
-
-    // Check diagonals for a win
-    if (board[0] === board[4] && board[4] === board[8] && board[0] !== "")
-      return board[0];
-    if (board[2] === board[4] && board[4] === board[6] && board[2] !== "")
-      return board[2];
-
-    return false; // No winner yet
+  // Ends the game, showing the final result
+  endGame(message) {
+    this.isGameActive = false; // Stop the game
+    this.displayController.showEndScreen(message); // Display the end game message
   }
 }
 
-// Initialize Players (Player X and Player O)
+// Initialize the game components
+const gameBoard = new GameBoard();
+const displayController = new DisplayController(gameBoard);
 const playerX = new Player("X");
 const playerO = new Player("O");
+const bot = new Bot("O");
 
-// Initialize Game Board and Controllers
-const gameBoardInstance = new GameBoard();
-const displayControllerInstance = new DisplayController(
-  gameBoardInstance.getGameBoard()
-);
-const gameControllerInstance = new GameController(
-  gameBoardInstance,
-  displayControllerInstance,
-  playerX,
-  playerO
-);
+// Create a new GameController instance to start the game
+new GameController(gameBoard, displayController, playerX, playerO, bot);
